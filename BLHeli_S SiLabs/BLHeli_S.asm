@@ -2867,7 +2867,71 @@ comm61_rev:
 comm_exit:
 	ret
 
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+;
+;		Music Routines
+;
+;**** **** **** **** **** **** **** **** **** **** **** **** ****
+music_gs4:
+	mov	Temp3, #232 				;length of tone
+	mov Temp4, #80				;number of delay loop1 cycles (tone frequency)
+	mov Temp5, #2				;number of delay loop2 cycles (octave range?/large step?)
+	jmp music
 
+music_as4:
+	mov	Temp3, #232 				;length of tone
+	mov Temp4, #29				;number of delay loop1 cycles (tone frequency)
+	mov Temp5, #2				;number of delay loop2 cycles (octave range?/large step?)
+	jmp music
+
+music_f4:
+	mov	Temp3, #232 ;44
+	mov Temp4, #172
+	mov Temp5, #2
+	jmp music
+
+music_c:
+	mov	Temp3, #65
+	mov Temp4, #182
+	mov Temp5, #1
+	jmp music
+
+music_f:
+	mov	Temp3, #87
+	mov Temp4, #86
+	mov Temp5, #1
+	jmp music
+
+music:
+	mov A, Temp5
+	push ACC
+
+	BcomFET_on										; BcomFET on
+	ApwmFET_on										; ApwmFET on
+	mov	A, Beep_Strength
+	djnz	ACC, $
+	ApwmFET_off										; ApwmFET off
+	BcomFET_off										; BcomFET off
+	pop ACC
+	mov Temp5, A
+	mov Temp2, A									; Make copy of Temp5 to work with (Temp2)
+	mov A, Temp4
+	mov Temp6, A
+music_O_loop:										; Outer loop
+	mov	Temp1, #23					  				; Number of times to repeat inner delay loop
+music_M_loop:										; Middle loop
+	clr	A
+ 	djnz	ACC, $									; Inner loop (42.7us - 1024 cycles)
+	djnz	Temp1, music_M_loop
+	djnz	Temp2, music_O_loop
+
+wait_150us:
+	mov		A, #30									;5us wait
+	djnz	ACC, $
+	djnz	Temp6, wait_150us
+	djnz	Temp3, music 							; length of tone
+
+ret
 ;**** **** **** **** **** **** **** **** **** **** **** **** ****
 ;
 ; Beeper routines (4 different entry points) 
@@ -3511,11 +3575,24 @@ pgm_start:
 	; Initializing beep
 	clr	IE_EA			; Disable interrupts explicitly
 	call wait200ms	
-	call beep_f1
-	call wait30ms
-	call beep_f2
-	call wait30ms
-	call beep_f3
+; 	call beep_f1
+; 	call wait30ms
+; 	call beep_f2
+; 	call wait30ms
+; 	call beep_f3
+; 	call wait30ms
+	call music_c
+	call music_f
+	call music_c
+	call music_f
+	call music_c
+	call music_c
+	call music_c
+	call music_c
+	call wait100ms
+	call music_gs4
+	call music_as4
+	call music_f4
 	call wait30ms
 	call	led_control
 
